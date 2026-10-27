@@ -29,7 +29,7 @@ Completeness on 10,833 injected flares (observable: 150 GHz SNR $\geq$ 1) at zer
 
 - **The flexible models learned the wrong things**
 
-   Gradient-boosted trees learned the training set's spectral distribution: near threshold, they detect 38% of falling-spectrum flares vs 90% of rising ones. The CNN matches logistic regression overall, but its completeness is up to 0.23 lower for short (< 1 h), moderately bright flares. Its noise tail is single-observation spikes, so it has to reject flares that look like them.
+   Gradient-boosted trees learned the training set's spectral index distribution: near threshold, they detect 38% of falling-spectrum flares vs 90% of rising ones. The CNN matches logistic regression overall, but its completeness is up to 0.23 lower for short (< 1 h), moderately bright flares. Its noise tail is single-observation spikes, so it has to reject flares that look like them.
 
 - **Real flares**
 
