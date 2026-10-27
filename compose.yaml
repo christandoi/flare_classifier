@@ -1,0 +1,27 @@
+# Local PostgreSQL database for the flare classifier dataset.
+# Start:  podman-compose up -d   (or: docker compose up -d)
+# Stop:   podman-compose down    (data is kept in the flare_db_data volume)
+# Reset:  podman-compose down -v (deletes the volume and all tables)
+
+services:
+  db:
+    # fully qualified image name so Podman doesn't prompt for a registry
+    image: docker.io/library/postgres:17
+    container_name: flare_db
+    environment:
+      POSTGRES_USER: flare
+      # local development only; the port is bound to localhost below
+      POSTGRES_PASSWORD: flare
+      POSTGRES_DB: flares
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - flare_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U flare -d flares']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  flare_db_data:

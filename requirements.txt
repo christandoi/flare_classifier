@@ -1,0 +1,13 @@
+# tested with Python 3.14. torch is installed separately (CPU build, tested with 2.14.1), see README:
+#   pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+numpy==2.5.4
+polars==2.0.0
+scipy==1.18.1
+scikit-learn==1.9.1
+matplotlib==3.11.2
+astropy==8.0.2
+tqdm==4.70.1
+psycopg[binary]==3.3.6
+jupyterlab==4.6.4
+# only needed if you use Podman instead of Docker:
+# podman-compose
