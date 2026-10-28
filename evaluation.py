@@ -44,12 +44,20 @@ def recall_matrix(positive_matrix, noise_matrix, fpr_levels):
     recalls : array_like
         Shape (n_fpr_levels, n_methods).
     """
-    return np.array([[recall_at_fpr(positive_matrix[:, j], noise_matrix[:, j], fpr)
-                      for j in range(positive_matrix.shape[1])] for fpr in fpr_levels])
+    return np.array(
+        [
+            [
+                recall_at_fpr(positive_matrix[:, j], noise_matrix[:, j], fpr)
+                for j in range(positive_matrix.shape[1])
+            ]
+            for fpr in fpr_levels
+        ]
+    )
 
 
-def bootstrap_recall(positives, noise, methods, fpr_levels=(0, 1e-4, 1e-3),
-                     n_boot=1000, seed=100):
+def bootstrap_recall(
+    positives, noise, methods, fpr_levels=(0, 1e-4, 1e-3), n_boot=1000, seed=100
+):
     """
     Recall at fixed noise FPR with bootstrap intervals, resampling whole
     stars (with replacement) so the intervals include star-to-star
@@ -84,20 +92,33 @@ def bootstrap_recall(positives, noise, methods, fpr_levels=(0, 1e-4, 1e-3),
     boot_recall : array_like
         Replicates, shape (n_boot, n_fpr_levels, n_methods).
     """
-    stars = np.unique(np.concatenate([positives['gaia_id'].to_numpy(), noise['gaia_id'].to_numpy()]))
-    positives_by_star = {g: positives.filter(pl.col('gaia_id') == g).select(methods).to_numpy() for g in stars}
-    noise_by_star = {g: noise.filter(pl.col('gaia_id') == g).select(methods).to_numpy() for g in stars}
+    stars = np.unique(
+        np.concatenate([positives['gaia_id'].to_numpy(), noise['gaia_id'].to_numpy()])
+    )
+    positives_by_star = {
+        g: positives.filter(pl.col('gaia_id') == g).select(methods).to_numpy()
+        for g in stars
+    }
+    noise_by_star = {
+        g: noise.filter(pl.col('gaia_id') == g).select(methods).to_numpy()
+        for g in stars
+    }
 
-    full_recall = recall_matrix(np.vstack(list(positives_by_star.values())),
-                                np.vstack(list(noise_by_star.values())), fpr_levels)
+    full_recall = recall_matrix(
+        np.vstack(list(positives_by_star.values())),
+        np.vstack(list(noise_by_star.values())),
+        fpr_levels,
+    )
 
     rng = np.random.default_rng(seed)
     boot_recall = np.empty((n_boot, len(fpr_levels), len(methods)))
     for b in tqdm(range(n_boot)):
         sampled_stars = rng.choice(stars, size=len(stars), replace=True)
-        boot_recall[b] = recall_matrix(np.vstack([positives_by_star[g] for g in sampled_stars]),
-                                       np.vstack([noise_by_star[g] for g in sampled_stars]),
-                                       fpr_levels)
+        boot_recall[b] = recall_matrix(
+            np.vstack([positives_by_star[g] for g in sampled_stars]),
+            np.vstack([noise_by_star[g] for g in sampled_stars]),
+            fpr_levels,
+        )
     return full_recall, boot_recall
 
 
@@ -123,13 +144,21 @@ def recall_table(full_recall, boot_recall, methods, fpr_levels=(0, 1e-4, 1e-3)):
     for i, fpr in enumerate(fpr_levels):
         for j, method in enumerate(methods):
             low, high = np.percentile(boot_recall[:, i, j], [2.5, 97.5])
-            rows.append({'fpr': fpr, 'method': method.replace('_score', ''),
-                         'recall': full_recall[i, j], 'ci_low': low, 'ci_high': high})
+            rows.append(
+                {
+                    'fpr': fpr,
+                    'method': method.replace('_score', ''),
+                    'recall': full_recall[i, j],
+                    'ci_low': low,
+                    'ci_high': high,
+                }
+            )
     return pl.DataFrame(rows)
 
 
-def paired_difference(full_recall, boot_recall, methods, method_a, method_b,
-                      fpr_levels=(0, 1e-4, 1e-3)):
+def paired_difference(
+    full_recall, boot_recall, methods, method_a, method_b, fpr_levels=(0, 1e-4, 1e-3)
+):
     """
     Recall difference method_a - method_b with a paired bootstrap interval:
     the difference is taken within each replicate, so star-to-star
@@ -157,9 +186,15 @@ def paired_difference(full_recall, boot_recall, methods, method_a, method_b,
     for i, fpr in enumerate(fpr_levels):
         difference = boot_recall[:, i, a] - boot_recall[:, i, b]
         low, high = np.percentile(difference, [2.5, 97.5])
-        rows.append({'fpr': fpr, 'difference': full_recall[i, a] - full_recall[i, b],
-                     'ci_low': low, 'ci_high': high,
-                     'fraction_positive': (difference > 0).mean()})
+        rows.append(
+            {
+                'fpr': fpr,
+                'difference': full_recall[i, a] - full_recall[i, b],
+                'ci_low': low,
+                'ci_high': high,
+                'fraction_positive': (difference > 0).mean(),
+            }
+        )
     return pl.DataFrame(rows)
 
 
@@ -190,8 +225,14 @@ def ts_scores(windows):
     pixel = pl.col('n_3sigma_both') >= 1
     return windows.with_columns(
         pl.when(positive).then(pl.col('ts')).otherwise(-1e9).alias('ts_positive_score'),
-        pl.when(positive & fwhm).then(pl.col('ts')).otherwise(-1e9).alias('ts_positive_fwhm_score'),
-        pl.when(positive & fwhm & pixel).then(pl.col('ts')).otherwise(-1e9).alias('ts_positive_fwhm_pixel_score'),
+        pl.when(positive & fwhm)
+        .then(pl.col('ts'))
+        .otherwise(-1e9)
+        .alias('ts_positive_fwhm_score'),
+        pl.when(positive & fwhm & pixel)
+        .then(pl.col('ts'))
+        .otherwise(-1e9)
+        .alias('ts_positive_fwhm_pixel_score'),
     )
 
 
@@ -218,9 +259,11 @@ def bin_series(values, edges, name):
         One label per value, e.g. '(1, 3]', '(-inf, 0]' or '(20, inf]'.
     """
     edges = list(edges)
-    labels = ([f"(-inf, {edges[0]:g}]"]
-              + [f"({low:g}, {high:g}]" for low, high in zip(edges[:-1], edges[1:])]
-              + [f"({edges[-1]:g}, inf]"])
+    labels = (
+        [f"(-inf, {edges[0]:g}]"]
+        + [f"({low:g}, {high:g}]" for low, high in zip(edges[:-1], edges[1:])]
+        + [f"({edges[-1]:g}, inf]"]
+    )
     index = np.searchsorted(edges, np.asarray(values, dtype=float), side='left')
     return pl.Series(name, np.array(labels)[index], dtype=pl.Enum(labels))
 
@@ -277,7 +320,10 @@ def snr_at_half(fraction, centers):
     for i in range(len(fraction) - 1):
         if fraction[i] < 0.5 <= fraction[i + 1]:
             weight = (0.5 - fraction[i]) / (fraction[i + 1] - fraction[i])
-            return np.exp(np.log(centers[i]) + weight * (np.log(centers[i + 1]) - np.log(centers[i])))
+            return np.exp(
+                np.log(centers[i])
+                + weight * (np.log(centers[i + 1]) - np.log(centers[i]))
+            )
     return np.nan
 
 

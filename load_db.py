@@ -3,7 +3,6 @@ import psycopg
 
 import read_spt3g_fits as spt3g
 
-
 DB_URL = "postgresql://flare:flare@localhost:5432/flares"
 
 # window grid settings, the same values used for the Python window fits

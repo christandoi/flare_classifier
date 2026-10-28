@@ -7,7 +7,6 @@ import TS_fitter as tsf
 from dataset import averaged_gaussian
 from load_db import query_df
 
-
 # input channels of each sequence, in array order
 CHANNELS = ["snr_95", "snr_150", "t_rel_scaled", "gap_scaled", "mask"]
 

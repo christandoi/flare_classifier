@@ -1,4 +1,5 @@
 # flare_classifier
+![CI](https://github.com/christandoi/flare_classifier/actions/workflows/ci.yml/badge.svg)
 
 Can machine learning find faint stellar flares in South Pole Telescope (SPT-3G) light curves better than the pipeline's TS > 45 cut, at the same false-positive rate?
 

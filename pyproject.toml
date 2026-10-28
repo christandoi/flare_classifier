@@ -1,0 +1,9 @@
+[tool.black]
+# keep single quotes (matches the editor's format-on-save)
+skip-string-normalization = true
+# TS_fitter.py is a copy of the TS_fitter repo, kept identical to it
+extend-exclude = 'TS_fitter\.py'
+
+[tool.pytest.ini_options]
+testpaths = ['tests']
+pythonpath = ['.']
